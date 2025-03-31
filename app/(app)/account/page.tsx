@@ -1,3 +1,4 @@
+'use client'
 import Account from "./_components";
 
 const AccountPage = () => {
