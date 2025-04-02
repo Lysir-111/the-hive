@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-
 import ReactMarkdown, { Components } from "react-markdown";
-
+import { Element } from 'hast'; // 导入正确的AST节点类型
 import { cn } from '@/lib/utils';
 import { CodeBlock } from './codeblock';
 
@@ -13,8 +12,6 @@ interface Props {
 }
 
 export const Markdown: React.FC<Props> = ({ children, asSpan = false, components, headingClassName }) => {
-
-
     const value = useMemo(() => {
         return children.replaceAll("\\(", "$")
             .replaceAll("\\)", "$")
@@ -45,10 +42,13 @@ export const Markdown: React.FC<Props> = ({ children, asSpan = false, components
                     return <h6 className={cn("text-xs font-bold", headingClassName)}>{children}</h6>
                 },
                 p({ children, node }) {
-                    const hasBlockElements = node?.children?.some((child: { type: string, tagName: string }) => 
-                        child.type === 'element' && 
-                        ['div', 'p', 'blockquote', 'form'].includes(child.tagName)
-                    );
+                    const hasBlockElements = node?.children?.some((child) => {
+                        // 安全类型检查：先确认是元素节点再访问tagName
+                        if (child.type !== 'element') return false;
+                        return ['div', 'p', 'blockquote', 'form'].includes(
+                            (child as Element).tagName
+                        );
+                    });
 
                     if (hasBlockElements) {
                         return (
@@ -76,9 +76,7 @@ export const Markdown: React.FC<Props> = ({ children, asSpan = false, components
                     )
                 },
                 code({ className, children }) {
-
                     const match = /language-(\w+)/.exec(className || '')
-
 
                     if (!match) {
                         return (
@@ -116,9 +114,9 @@ export const Markdown: React.FC<Props> = ({ children, asSpan = false, components
         >
             {value}
         </ReactMarkdown>
-    ), [value, asSpan, components]);
+    ), [value, asSpan, components, headingClassName]);
 
     return memoizedContent;
 };
 
-Markdown.displayName = 'Markdown'
+Markdown.displayName = 'Markdown';
